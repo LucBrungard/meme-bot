@@ -1,0 +1,36 @@
+{
+  "name": "meme-bot",
+  "version": "1.0.0",
+  "description": "Discord Bot that takes a random meme as image from local folder",
+  "license": "MIT",
+  "author": "Luc BRUNGARD",
+  "email": "luc.brungard@laposte.net",
+  "private": true,
+  "homepage": "",
+  "bugs": {
+    "url": "",
+    "email": ""
+  },
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint --fix ./src",
+    "commands:delete": "node src/commands/delete-commands.js",
+    "commands:register-dev": "NODE_ENV=development node src/commands/deploy-commands.js",
+    "commands:register-prod": "NODE_ENV=production node src/commands/deploy-commands.js",
+    "build:dev": "npm run commands:delete && npm run commands:register-dev",
+    "build:prod": "npm run commands:delete && npm run commands:register-prod",
+    "start:dev": "NODE_ENV=development nodemon --trace-warnings src/index.js",
+    "start:prod": "NODE_ENV=production node src/index.js"
+  },
+  "type": "module",
+  "devDependencies": {
+    "eslint": "^8.23.0",
+    "nodemon": "^2.0.19"
+  },
+  "dependencies": {
+    "@discordjs/rest": "^1.1.0",
+    "discord.js": "^14.3.0",
+    "dotenv": "^16.0.2",
+    "node-fetch": "^3.2.10"
+  }
+}
