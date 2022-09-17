@@ -1,23 +1,26 @@
-import { SlashCommandBuilder, AttachmentBuilder } from "discord.js";
+import { SlashCommandBuilder, AttachmentBuilder, Interaction } from "discord.js";
 import * as path from "node:path";
 import * as fs from "node:fs";
 import { MEME_FOLDER } from "../../constants.js";
+import { Command } from "../../types/command.js";
 
 const memesPath = path.join(process.cwd(), MEME_FOLDER);
 let files = fs.readdirSync(memesPath);
 
-// Reset files from list
-setInterval(() => {
-	files = [];
-	files = fs.readdirSync(memesPath);
-}, 1000 * 60 * 60 * 24);
-
-export const command = {
+export const command: Command = {
 	data: new SlashCommandBuilder()
 		.setName("meme")
 		.setDescription("Reply with a meme as image !"),
-	async execute(interaction) {
+	async execute(interaction: Interaction) {
+		if (!interaction.isRepliable()) return;
+		
 		// Generate random index from 0 to files lengths
+		if (files.length === 0) {
+			interaction.reply("No more memes in folder ! I'm refueling chief !");
+			files = fs.readdirSync(memesPath);
+			return;
+		}
+
 		const idx = Math.floor(Math.random() * files.length);
 		const meme = files[idx];
 

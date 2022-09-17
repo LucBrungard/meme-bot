@@ -5,7 +5,6 @@ const formatter = new Intl.DateTimeFormat("fr-FR", {
 	hour: "numeric",
 	minute: "numeric",
 	second: "numeric",
-	fractionalSecondDigits: 3,
 });
 
 const getDate = () => {
