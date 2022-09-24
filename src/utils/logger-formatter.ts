@@ -1,7 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import log from "npmlog";
-import { getDate } from "./date-formatter.js";
+import { getDate } from "./date-formatter";
 
 const formatLogger = () => {
     log.enableColor();
