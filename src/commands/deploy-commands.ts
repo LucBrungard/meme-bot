@@ -1,46 +1,47 @@
-import { Routes } from "discord.js";
+import { RESTPostAPIApplicationCommandsJSONBody, Routes } from "discord.js";
 import { REST } from "@discordjs/rest";
-import { BOT_TOKEN, CLIENT_ID, GUILD_ID } from "../constants.js";
-import * as path from "node:path";
-import * as fs from "node:fs";
 import log from "npmlog";
-import {fileURLToPath} from "url";
-import { getDate } from "../utils/date-formatter.js";
 import { exit } from "node:process";
+import { BOT_TOKEN, CLIENT_ID, GUILD_ID } from "../constants";
+import { getDate } from "../utils/date-formatter";
+import { loadCommands } from "../utils/commands-loader";
+import { formatLogger } from "../utils/logger-formatter";
 
-if (!BOT_TOKEN) {
-	log.error(getDate(), "BOT_TOKEN is invalid !");
-	exit(1);
-}
-if (!CLIENT_ID) {
-	log.error(getDate(), "CLIENT_ID is invalid !");
-	exit(1);
-}
-if (!GUILD_ID) {
-	log.error(getDate(), "GUILD_ID is invalid !");
-	exit(1);
-}
+formatLogger();
 
-log.info(getDate(), "Deploying new commands ...");
+log.infoV2("Deploying new commands ...");
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-const commands = [];
+const commands: RESTPostAPIApplicationCommandsJSONBody[] = [];
 
-const commandsPath = path.join(__dirname, process.env.NODE_ENV ?? "development");
+loadCommands()
+    .then((co) => {
+        if (!BOT_TOKEN) {
+            log.error(getDate(), "BOT_TOKEN is invalid !");
+            exit(1);
+        }
+        if (!CLIENT_ID) {
+            log.error(getDate(), "CLIENT_ID is invalid !");
+            exit(1);
+        }
+        if (!GUILD_ID) {
+            log.error(getDate(), "GUILD_ID is invalid !");
+            exit(1);
+        }
+        
+        for (const command of co) {
+            commands.push(command.data.toJSON());
+        }
 
-const commandFiles = fs.readdirSync(commandsPath);
+        const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
 
-for (const file of commandFiles) {
-	const filePath = path.join(commandsPath, file);
-	const { command } = await import(filePath);
-	commands.push(command.data.toJSON());
-}
+        rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands })
+            .then((data) => {
+                log.info(getDate(), `Successfully registered ${(data as Array<unknown>).length} application commands.`);
+            })
+            .catch(console.error);
+    })
+    .catch((err: Error) => {
+        log.errorV2(err.message);
+        console.error(err);
+    });
 
-const rest = new REST({ version: "10" }).setToken(BOT_TOKEN);
-
-rest.put(Routes.applicationGuildCommands(CLIENT_ID, GUILD_ID), { body: commands })
-	.then((data) => {
-		log.info(getDate(), `Successfully registered ${(data as Array<unknown>).length} application commands.`);
-	})
-	.catch(console.error);
