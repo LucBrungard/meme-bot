@@ -2,20 +2,20 @@
 import { Client, Collection, GatewayIntentBits } from "discord.js";
 import * as fs from "node:fs";
 import * as path from "node:path";
-import {fileURLToPath} from "url";
-import fetch from "node-fetch";
 import log from "npmlog";
-import { BOT_TOKEN, MEME_FOLDER, TRANSFERT_CHANNEL_ID } from "./constants.js";
-import { getDate } from "./utils/date-formatter.js";
+import { RequestInfo, RequestInit } from "node-fetch";
 import { exit } from "node:process";
-import { Command } from "./types/command.js";
-import { Extentions } from "./types/extensions.js";
-import { formatLogger } from "./utils/logger-formatter.js";
+import { Command } from "./types/command";
+import { Extentions } from "./types/extensions";
+import { formatLogger } from "./utils/logger-formatter";
+import { BOT_TOKEN, MEME_FOLDER, TRANSFERT_CHANNEL_ID } from "./constants";
+import { getDate } from "./utils/date-formatter";
+import { loadCommands } from "./utils/commands-loader";
+
+const fetch = (url: RequestInfo, init?: RequestInit) =>
+    import("node-fetch").then(({ default: fetch }) => fetch(url, init));
 
 formatLogger();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 log.infoV2("Creating new client ...");
 const client = new Client({ 
@@ -30,23 +30,19 @@ log.infoV2("Client created with success !");
 // Create custom property
 log.infoV2("Loading commands ...");
 client.commands = new Collection();
-
 // Get commands from commands folder according to dev phase
-const commandsPath = path.join(__dirname, "commands", process.env.NODE_ENV ?? "development");
-const commandFiles = fs.readdirSync(commandsPath);
-
-if (commandFiles.length === 0) {
-    log.errorV2("No command was found !");
-    exit(1);
-}
-
-for (const file of commandFiles) {
-    const filePath = path.join(commandsPath, file);
-    const { command } = await import(filePath);
-    client.commands.set(command.data.name, command);
-}
-
+loadCommands()
+    .then((commands) => {
+        for (const command of commands) {
+            client.commands.set(command.data.name, command);
+        }
+    })
+    .catch((err: Error) => {
+        log.errorV2(err.message);
+        exit(1);
+    });
 log.infoV2("Commands have been registered with success !");
+
 
 // When the client is ready, run this code (only once)
 client.once("ready", () => {
@@ -58,6 +54,7 @@ client.once("ready", () => {
 
     log.infoV2("Ready !");
 });
+
 
 // Download new image posted in "memes" channel
 client.on("messageCreate", (message) => {
@@ -86,10 +83,11 @@ client.on("messageCreate", (message) => {
     });
 });
 
+
 client.on("interactionCreate", async interaction => {
     if (!interaction.isChatInputCommand()) return;
 
-    const command: Command = interaction.client.commands.get(interaction.commandName);
+    const command: Command | undefined = interaction.client.commands.get(interaction.commandName);
 
     log.command(getDate(), `Command -${interaction.commandName}- has been invoked by ${interaction.user.tag}`);
 
