@@ -1,7 +1,6 @@
 import { Interaction, SlashCommandBuilder } from "discord.js";
-import { Command } from "../../types/command";
 
-export const command: Command = {
+export default {
     data: new SlashCommandBuilder()
         .setName("server")
         .setDescription("Replies with server info!"),

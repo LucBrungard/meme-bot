@@ -1,7 +1,6 @@
 import { SlashCommandBuilder, Interaction } from "discord.js";
-import { Command } from "../../types/command";
 
-export const command: Command = {
+export default {
     data: new SlashCommandBuilder()
         .setName("ping")
         .setDescription("Replies with Pong !"),

@@ -1,13 +1,12 @@
 import { SlashCommandBuilder, AttachmentBuilder, Interaction } from "discord.js";
 import * as path from "node:path";
 import * as fs from "node:fs";
-import { MEME_FOLDER } from "../../constants.js";
-import { Command } from "../../types/command.js";
+import { MEME_FOLDER } from "../../constants";
 
 const memesPath = path.join(process.cwd(), MEME_FOLDER);
 let files = fs.readdirSync(memesPath);
 
-export const command: Command = {
+export default {
     data: new SlashCommandBuilder()
         .setName("meme")
         .setDescription("Reply with a meme as image !"),
